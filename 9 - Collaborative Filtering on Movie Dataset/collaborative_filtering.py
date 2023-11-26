@@ -28,12 +28,15 @@ class CollaborativeFiltering(object):
         # TODO: Implement this function based on the documentation.
 
         # TODO: Check if the parameter data is a Series or a DataFrame
-
+        if len(data.shape) == 1:
+            axis = 0
+        else:
+            axis = 1
         # TODO: return the mean of each row if the parameter data is a
         # DataFrame. Return the mean of the Series if the parameter data is a
         # Series.
         # Hint: Use pandas.DataFrame.mean() or pandas.Series.mean() functions.
-        pass
+        return data.mean(axis=axis)
 
     def normalize_data(self, data, row_mean):
         """Returns the data normalized by subtracting the row mean.
@@ -60,7 +63,7 @@ class CollaborativeFiltering(object):
         # Normalize the parameter data by parameter row_mean.
         # HINT: Use pandas.DataFrame.subtract() or pandas.Series.subtract()
         # functions.
-        pass
+        return data.subtract(row_mean, axis=0)
 
     def get_cosine_similarity(self, vector1, vector2):
         """Returns the cosine similarity between two vectors. These vectors can
@@ -89,12 +92,28 @@ class CollaborativeFiltering(object):
         # TODO: Implement this function based on the documentation.
 
         # TODO: Check if the parameter data is a Series or a DataFrame
+        if len(vector1.shape) == 1 and len(vector2.shape) == 1:
+            axis = 0
+        else:
+            axis = 1
+        sum_of_products = (vector1 * vector2).sum(axis=axis)
+           
+        if len(vector1.shape) == 1:
+            axis = 0
+        else:
+            axis = 1
+        vector1_sss = np.sqrt((vector1 ** 2).sum(axis=axis))
+        
+        if len(vector2.shape) == 1:
+            axis = 0
+        else:
+            axis = 1
+        vector2_sss = np.sqrt((vector2 ** 2).sum(axis=axis))
 
         # TODO: Compute the cosine similarity between the two parameters.
         # HINT: Use np.sqrt() and pandas.DataFrame.sum() and/or
         # pandas.Series.sum() functions.
-
-        pass
+        return sum_of_products / (vector1_sss * vector2_sss)
 
     def get_k_similar(self, data, vector):
         """Returns two values - the indices of the top k similar items to the
@@ -116,18 +135,22 @@ class CollaborativeFiltering(object):
         # TODO: Normalize parameters data and vector
         # HINT: Use the normalize_data() function that we have defined in this
         # class
+        n_data = self.normalize_data(data, self.get_row_mean(data))
+        n_vector = self.normalize_data(vector, self.get_row_mean(vector))
 
         # TODO: Get the cosine similarity between the normalized data and
         # vector
         # HINT: Use the get_cosine_similarity() function that we have defined
         # in this class
+        similarity_vector = self.get_cosine_similarity(n_data, n_vector)
 
         # TODO: Get the INDICES of the top k most similar items based on
         # the cosine similarity values
         # HINT: Use pandas.Series.nlargest() function.
+        k_similar = similarity_vector.nlargest(n=self.k).index
 
         # TODO: Return 2 values. See function comment
-        pass
+        return k_similar, similarity_vector.loc[k_similar]
 
     def get_rating(self, data, index, column):
         """Returns the extrapolated rating for the item in row index from the
@@ -156,8 +179,11 @@ class CollaborativeFiltering(object):
         # TODO: Get top k items that are similar to the parameter vector
         # HINT: Use the get_k_similar() function that we have defined in this
         # class
+        k_similar, k_similarity_values = self.get_k_similar(new_data, vector)
+        k_ratings = data.loc[k_similar].iloc[:, column]
 
         # TODO: Compute for the rating using the similarity values and the raw
         # ratings for the k similar items.
+        rating = (k_similarity_values * k_ratings).sum() / k_similarity_values.sum()
 
         return rating
