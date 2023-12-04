@@ -18,7 +18,7 @@ def to_lower_case(text_series):
 
     # TODO: Implement this function based on the documentation.
 
-    pass
+    return text_series.str.lower()
 
 
 def remove_punctuations(text_series):
@@ -36,12 +36,13 @@ def remove_punctuations(text_series):
 
     # TODO: Get all the punctuations to remove, form it into a string, then
     # assign the string to variable `punctuations`
-    punctuations = None
+    punctuations = string.punctuation
 
     # TODO: For each text in the `Series`, remove the punctuations. Then,
     # append the text without punctuations to the list `texts`.
     for text in text_series:
-        pass
+        text = text.translate(str.maketrans('', '', punctuations))
+        texts.append(text)
 
     return texts
 
@@ -63,12 +64,13 @@ def remove_stopwords(text_series):
     # `set` to the variable `stopwords_set`.
     # HINT: Read the documentation of `stopwords` from the `nltk.corpus`
     # package.
-    stopwords_set = None
+    stopwords_set = set(stopwords.words('english'))
 
     # TODO: For each text in the `Series`, remove the stopwords. Then, append
     # the text without the stopwords to the list `texts`.
     for text in text_series:
-        pass
+        word_list = [w for w in str(text).split() if w not in stopwords_set]
+        texts.append(' '.join(word_list))
 
     return texts
 
@@ -91,17 +93,18 @@ def get_frequent_words(text_series,
 
     # TODO: Instantiate a `Counter` object from the `collections` package and
     # assign it to variable `count`.
-    count = None
+    count = Counter()
 
     # TODO: Get each word in all strings in the series then add 1 to its tally
     # in the variable `count`.
     for text in text_series:
-        pass
+        for word in text.split():
+            count[word] += 1
 
     # TODO: Get the top `num_frequent` frequent words in the dataset and
     # assign it to `frequent_words`.
     # HINT: Read the documentation of `Counter` from the `collections` package.
-    frequent_words = None
+    frequent_words = count.most_common(num_frequent)
 
     return frequent_words
 
@@ -125,12 +128,14 @@ def remove_frequent_words(text_series,
     # TODO: Get all the `num_frequent` frequent words, put it in a `set`,
     # and assign the `set` to the variable `frequent_set`.
     # HINT: Use the `get_frequent_words()` function that we have defined.
-    frequent_set = None
+    frequent_words = get_frequent_words(text_series, num_frequent)
+    frequent_set = set([w for (w, _) in frequent_words])
 
     # TODO: For each text in the `Series`, remove the frequent words. Then,
     # append the text without the frequent words to the list `texts`.
     for text in text_series:
-        pass
+        word_list = [w for w in str(text).split() if w not in frequent_set]
+        texts.append(' '.join(word_list))
 
     return texts
 
@@ -151,14 +156,15 @@ def stem(text_series):
 
     # TODO: Instantiate a `PorterStemmer` object from the `nltk.stem.porter`
     # package and assign it to variable `stemmer`.
-    stemmer = None
+    stemmer = PorterStemmer()
 
     # TODO: For each text in the `Series`, stem each word. Then, append the
     # text with stemmed words to the list `texts`.
     # HINT: Read the documentation of `PorterStemmer` from the
     # `nltk.stem.porter` package.
     for text in text_series:
-        pass
+        word_list = [stemmer.stem(word) for word in text.split()]
+        texts.append(' '.join(word_list))
 
     return texts
 
@@ -179,7 +185,7 @@ def lemmatize(text_series):
 
     # TODO: Instantiate a `WordNetLemmatizer` object from the `nltk.stem`
     # package and assign it to variable `lemmatizer`.
-    lemmatizer = None
+    lemmatizer = WordNetLemmatizer()
 
     map = {'N': wordnet.NOUN,
            'V': wordnet.VERB,
@@ -193,6 +199,10 @@ def lemmatize(text_series):
     # HINT: Read the documentation of `WordNetLemmatizer` from the `nltk.stem`
     # package.
     for text in text_series:
-        pass
+        pos_tagged_text = pos_tag(text.split())
+
+        word_list = [lemmatizer.lemmatize(w, map.get(pos[0], wordnet.NOUN))
+                     for w, pos in pos_tagged_text]
+        texts.append(' '.join(word_list))
 
     return texts
